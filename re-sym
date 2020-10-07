@@ -1,0 +1,47 @@
+#!/bin/bash
+
+filename="$1"
+targetDSYM="$2"
+outfile="$3"
+
+
+echo " \n \n \n \n**************"  >> $outfile
+echo "* this re-symbolicatecrash shell script created by Cyrus on 20180713" >> $outfile
+echo "* is for crash log built by Xcode9" >> $outfile
+echo "************** \n \n \n \n" >> $outfile
+
+while read -r line
+do
+    lineContent="$line"
+
+set -f                      # avoid globbing (expansion of *).
+array=(${lineContent/\t/ })
+
+if [ ${#array[@]} -eq 6 ]; then
+### -=-=-=-=- split record to grep address
+#### -=-=-=-=- run command to do re-symbol 
+#echo "line content - address ( ${array[3]} )"
+#echo "line content - address ( ${array[2]} )"
+if [ ${#array[3]} -eq 18 ];then
+result=$(atos -o $targetDSYM/Contents/Resources/DWARF/ETNet -l ${array[3]} ${array[2]})
+echo "${array[0]}\t${array[1]}\t$result"  >> $outfile
+else
+    echo "$lineContent" >> $outfile
+fi
+
+else
+
+if [ ${#array[@]} -eq 7 ];then
+result=$(atos -o $targetDSYM/Contents/Resources/DWARF/ETNet -l ${array[4]} ${array[3]})
+echo "${array[0]}\t${array[1]}${array[2]}\t$result"  >> $outfile
+else
+	echo "line content - $lineContent ( ${#array[@]} )"
+    echo "$lineContent" >> $outfile
+fi
+
+fi
+
+
+done < "$filename"
+
+
